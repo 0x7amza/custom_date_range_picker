@@ -1,22 +1,9 @@
-import 'custom_calendar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:flutter/material.dart';
 
-/// user for DateTime formatting
-import 'package:intl/intl.dart';
-
-/// A custom date range picker widget that allows users to select a date range.
-/// `const CustomDateRangePicker({
-///   Key? key,
-///   this.initialStartDate,
-///   this.initialEndDate,
-///   required this.primaryColor,
-///   required this.backgroundColor,
-///   required this.onApplyClick,
-///   this.barrierDismissible = true,
-///   required this.minimumDate,
-///   required this.maximumDate,
-///   required this.onCancelClick,
-/// })`
+/// A custom date range picker widget with multi-language, RTL support, and theme customization
 class CustomDateRangePicker extends StatefulWidget {
   /// The minimum date that can be selected in the calendar.
   final DateTime minimumDate;
@@ -27,10 +14,10 @@ class CustomDateRangePicker extends StatefulWidget {
   /// Whether the widget can be dismissed by tapping outside of it.
   final bool barrierDismissible;
 
-  /// The initial start date for the date range picker. If not provided, the calendar will default to the minimum date.
+  /// The initial start date for the date range picker.
   final DateTime? initialStartDate;
 
-  /// The initial end date for the date range picker. If not provided, the calendar will default to the maximum date.
+  /// The initial end date for the date range picker.
   final DateTime? initialEndDate;
 
   /// The primary color used for the date range picker.
@@ -39,10 +26,22 @@ class CustomDateRangePicker extends StatefulWidget {
   /// The background color used for the date range picker.
   final Color backgroundColor;
 
-  /// A callback function that is called when the user applies the selected date range.
+  /// The text color used in the picker.
+  final Color textColor;
+
+  /// The color for disabled dates.
+  final Color disabledColor;
+
+  /// The font family to use throughout the picker.
+  final String? fontFamily;
+
+  /// The locale to use for formatting dates.
+  final Locale locale;
+
+  /// A callback function for when the user applies the selected date range.
   final Function(DateTime, DateTime) onApplyClick;
 
-  /// A callback function that is called when the user cancels the selection of the date range.
+  /// A callback function for when the user cancels the selection.
   final Function() onCancelClick;
 
   const CustomDateRangePicker({
@@ -52,10 +51,14 @@ class CustomDateRangePicker extends StatefulWidget {
     required this.primaryColor,
     required this.backgroundColor,
     required this.onApplyClick,
-    this.barrierDismissible = true,
+    required this.onCancelClick,
     required this.minimumDate,
     required this.maximumDate,
-    required this.onCancelClick,
+    this.barrierDismissible = true,
+    this.textColor = Colors.black,
+    this.disabledColor = Colors.grey,
+    this.fontFamily,
+    this.locale = const Locale('en', 'US'),
   }) : super(key: key);
 
   @override
@@ -64,38 +67,50 @@ class CustomDateRangePicker extends StatefulWidget {
 
 class CustomDateRangePickerState extends State<CustomDateRangePicker>
     with TickerProviderStateMixin {
-  AnimationController? animationController;
-
+  late AnimationController animationController;
   DateTime? startDate;
-
   DateTime? endDate;
 
   @override
   void initState() {
+    super.initState();
     animationController = AnimationController(
-        duration: const Duration(milliseconds: 400), vsync: this);
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
     startDate = widget.initialStartDate;
     endDate = widget.initialEndDate;
-    animationController?.forward();
-    super.initState();
+    animationController.forward();
   }
 
   @override
   void dispose() {
-    animationController?.dispose();
+    animationController.dispose();
     super.dispose();
+  }
+
+  TextStyle _getTextStyle({
+    double fontSize = 16,
+    FontWeight fontWeight = FontWeight.normal,
+    Color? color,
+  }) {
+    return TextStyle(
+      fontFamily: widget.fontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color ?? widget.textColor,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isRTL = Directionality.of(context) == TextDirection.rtl;
+
     return Center(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: InkWell(
           splashColor: Colors.transparent,
-          focusColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          hoverColor: Colors.transparent,
           onTap: () {
             if (widget.barrierDismissible) {
               Navigator.pop(context);
@@ -104,199 +119,170 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: widget.backgroundColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        offset: const Offset(4, 4),
-                        blurRadius: 8.0),
-                  ],
-                ),
-                child: InkWell(
-                  borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-                  onTap: () {},
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: widget.backgroundColor,
+                    borderRadius: BorderRadius.circular(24.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                Text(
-                                  'From',
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 4,
-                                ),
-                                Text(
-                                  startDate != null
-                                      ? DateFormat('EEE, dd MMM')
-                                          .format(startDate!)
-                                      : '--/-- ',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            height: 74,
-                            width: 1,
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                Text(
-                                  'To',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 4,
-                                ),
-                                Text(
-                                  endDate != null
-                                      ? DateFormat('EEE, dd MMM')
-                                          .format(endDate!)
-                                      : '--/-- ',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                      const Divider(
-                        height: 1,
-                      ),
-                      CustomCalendar(
-                        minimumDate: widget.minimumDate,
-                        maximumDate: widget.maximumDate,
-                        initialEndDate: widget.initialEndDate,
-                        initialStartDate: widget.initialStartDate,
-                        primaryColor: widget.primaryColor,
-                        startEndDateChange:
-                            (DateTime startDateData, DateTime endDateData) {
-                          setState(() {
-                            startDate = startDateData;
-                            endDate = endDateData;
-                          });
-                        },
-                      ),
+                    children: [
+                      // Header with dates
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 16, right: 16, bottom: 16, top: 8),
+                        padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
                             Expanded(
-                              child: Container(
-                                height: 48,
-                                decoration: const BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(24.0)),
-                                ),
-                                child: OutlinedButton(
-                                  style: ButtonStyle(
-                                    side: WidgetStateProperty.all(
-                                        BorderSide(color: widget.primaryColor)),
-                                    shape: WidgetStateProperty.all(
-                                      const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(24.0)),
-                                      ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    isRTL ? 'إلى' : 'To',
+                                    style: _getTextStyle(
+                                      color: Colors.grey.shade700,
                                     ),
-                                    backgroundColor: WidgetStateProperty.all(
-                                        widget.primaryColor),
                                   ),
-                                  onPressed: () {
-                                    try {
-                                      widget.onCancelClick();
-                                      Navigator.pop(context);
-                                    } catch (_) {}
-                                  },
-                                  child: const Center(
-                                    child: Text(
-                                      'Cancel',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                      ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    endDate != null
+                                        ? intl.DateFormat(
+                                            'EEE, dd MMM',
+                                            widget.locale.toString(),
+                                          ).format(endDate!)
+                                        : '--/--',
+                                    style: _getTextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              height: 74,
+                              width: 1,
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    isRTL ? 'من' : 'From',
+                                    style: _getTextStyle(
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    startDate != null
+                                        ? intl.DateFormat(
+                                            'EEE, dd MMM',
+                                            widget.locale.toString(),
+                                          ).format(startDate!)
+                                        : '--/--',
+                                    style: _getTextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      // Calendar
+                      CustomCalendar(
+                        minimumDate: widget.minimumDate,
+                        maximumDate: widget.maximumDate,
+                        initialStartDate: widget.initialStartDate,
+                        initialEndDate: widget.initialEndDate,
+                        primaryColor: widget.primaryColor,
+                        disabledColor: widget.disabledColor,
+                        textColor: widget.textColor,
+                        fontFamily: widget.fontFamily,
+                        locale: widget.locale,
+                        isRTL: isRTL,
+                        startEndDateChange: (DateTime start, DateTime end) {
+                          setState(() {
+                            startDate = start;
+                            endDate = end;
+                          });
+                        },
+                      ),
+                      // Buttons
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: widget.primaryColor,
+                                  side: BorderSide(color: widget.primaryColor),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24.0),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  widget.onCancelClick();
+                                  Navigator.pop(context);
+                                },
+                                child: Text(
+                                  isRTL ? 'إلغاء' : 'Cancel',
+                                  style: _getTextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: widget.primaryColor,
                                   ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Container(
-                                height: 48,
-                                decoration: const BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(24.0)),
-                                ),
-                                child: OutlinedButton(
-                                  style: ButtonStyle(
-                                    side: WidgetStateProperty.all(
-                                        BorderSide(color: widget.primaryColor)),
-                                    shape: WidgetStateProperty.all(
-                                      const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(24.0)),
-                                      ),
-                                    ),
-                                    backgroundColor: WidgetStateProperty.all(
-                                        widget.primaryColor),
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24.0),
                                   ),
-                                  onPressed: () {
-                                    try {
-                                      widget.onApplyClick(startDate!, endDate!);
-                                      Navigator.pop(context);
-                                    } catch (_) {}
-                                  },
-                                  child: const Center(
-                                    child: Text(
-                                      'Apply',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (startDate != null && endDate != null) {
+                                    widget.onApplyClick(startDate!, endDate!);
+                                    Navigator.pop(context);
+                                  }
+                                },
+                                child: Text(
+                                  isRTL ? 'تطبيق' : 'Apply',
+                                  style: _getTextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -307,50 +293,4 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
       ),
     );
   }
-}
-
-/// Displays a custom date range picker dialog box.
-/// `context` The context in which to show the dialog.
-/// `dismissible` A boolean value indicating whether the dialog can be dismissed by tapping outside of it.
-/// `minimumDate` A DateTime object representing the minimum allowable date that can be selected in the date range picker.
-/// `maximumDate` A DateTime object representing the maximum allowable date that can be selected in the date range picker.
-/// `startDate` A nullable DateTime object representing the initial start date of the date range selection.
-/// `endDate` A nullable DateTime object representing the initial end date of the date range selection.
-/// `onApplyClick` A function that takes two DateTime parameters representing the selected start and end dates, respectively, and is called when the user taps the "Apply" button.
-/// `onCancelClick` A function that is called when the user taps the "Cancel" button.
-/// `backgroundColor` The background color of the dialog.
-/// `primaryColor` The primary color of the dialog.
-/// `fontFamily` The font family to use for the text in the dialog.
-
-void showCustomDateRangePicker(
-  BuildContext context, {
-  required bool dismissible,
-  required DateTime minimumDate,
-  required DateTime maximumDate,
-  DateTime? startDate,
-  DateTime? endDate,
-  required Function(DateTime startDate, DateTime endDate) onApplyClick,
-  required Function() onCancelClick,
-  required Color backgroundColor,
-  required Color primaryColor,
-  String? fontFamily,
-}) {
-  /// Request focus to take it away from any input field that might be in focus
-  FocusScope.of(context).requestFocus(FocusNode());
-
-  /// Show the CustomDateRangePicker dialog box
-  showDialog<dynamic>(
-    context: context,
-    builder: (BuildContext context) => CustomDateRangePicker(
-      barrierDismissible: true,
-      backgroundColor: backgroundColor,
-      primaryColor: primaryColor,
-      minimumDate: minimumDate,
-      maximumDate: maximumDate,
-      initialStartDate: startDate,
-      initialEndDate: endDate,
-      onApplyClick: onApplyClick,
-      onCancelClick: onCancelClick,
-    ),
-  );
 }
