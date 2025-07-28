@@ -454,3 +454,47 @@ void showCustomDateRangePicker(
     ),
   );
 }
+void showCustomDateRangePicker(
+  BuildContext context, {
+  required bool dismissible,
+  required DateTime minimumDate,
+  required DateTime maximumDate,
+  DateTime? startDate,
+  DateTime? endDate,
+  required Function(DateTime startDate, DateTime endDate) onApplyClick,
+  required Function() onCancelClick,
+  required Color backgroundColor,
+  required Color primaryColor,
+  Color textColor = Colors.black,
+  Color disabledColor = Colors.grey,
+  String? fontFamily,
+  Locale locale = const Locale('en', 'US'),
+}) {
+  FocusScope.of(context).requestFocus(FocusNode());
+
+  showDialog<dynamic>(
+    context: context,
+    builder: (BuildContext context) => Directionality(
+      textDirection: locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+      child: Localizations.override(
+        context: context,
+        locale: locale,
+        child: CustomDateRangePicker(
+          barrierDismissible: dismissible,
+          backgroundColor: backgroundColor,
+          primaryColor: primaryColor,
+          textColor: textColor,
+          disabledColor: disabledColor,
+          fontFamily: fontFamily,
+          locale: locale,
+          minimumDate: minimumDate,
+          maximumDate: maximumDate,
+          initialStartDate: startDate,
+          initialEndDate: endDate,
+          onApplyClick: onApplyClick,
+          onCancelClick: onCancelClick,
+        ),
+      ),
+    ),
+  );
+}
